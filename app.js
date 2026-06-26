@@ -98,7 +98,7 @@ function initGestures(panel, team) {
       } else {
         updateScore(team, -1); // Swipe Left -> Deduct
       }
-    } else if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10 && duration < 300) {
+    } else if (Math.abs(diffX) < 20 && Math.abs(diffY) < 20 && duration < 350) {
       updateScore(team, 1); // Clean short tap -> Add
     }
   }, { passive: true });
