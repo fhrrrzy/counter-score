@@ -1,8 +1,7 @@
 // State Management
 const state = {
   red: 0,
-  blue: 0,
-  isSwapped: false
+  blue: 0
 };
 
 // DOM References
@@ -13,7 +12,6 @@ const scoreBlue = document.getElementById("score-blue");
 const flashRed = document.getElementById("flash-red");
 const flashBlue = document.getElementById("flash-blue");
 const btnReset = document.getElementById("btn-reset");
-const btnSwap = document.getElementById("btn-swap");
 const btnFullscreen = document.getElementById("btn-fullscreen");
 const iconFullscreen = document.getElementById("icon-fullscreen");
 const wakeLockIndicator = document.getElementById("wakelock-indicator");
@@ -120,7 +118,7 @@ function triggerHaptic(presetName) {
 }
 
 // Update Score Function
-function updateScore(team, diff) {
+function updateScore(team, diff, isTap = false) {
   const oldScore = state[team];
   state[team] = Math.max(0, state[team] + diff);
   
@@ -133,23 +131,19 @@ function updateScore(team, diff) {
   scoreDisplay.textContent = state[team];
   
   if (diff > 0) {
-    // Add Score visual feedback (Bump animation + Light haptic click)
-    triggerHaptic("light");
+    // Add Score visual feedback (Bump animation + Light haptic click on tap only)
+    if (isTap) triggerHaptic("light");
     scoreDisplay.classList.remove("bump");
     void scoreDisplay.offsetWidth; // Trigger reflow to restart animation
     scoreDisplay.classList.add("bump");
     setTimeout(() => scoreDisplay.classList.remove("bump"), 150);
   } else {
-    // Deduct Score visual feedback (Flash animation + Warning double pulse)
-    triggerHaptic("warning");
+    // Deduct Score visual feedback (Flash animation)
     flash.classList.remove("show");
     void flash.offsetWidth;
     flash.classList.add("show");
     setTimeout(() => flash.classList.remove("show"), 150);
   }
-  
-  // Disable swap button if scores are not both 0
-  updateButtonStates();
   
   // Re-verify Wake Lock is still active on score update
   ensureWakeLock();
@@ -177,12 +171,12 @@ function initGestures(panel, team) {
     // Swipe detection (horizontal swipe > 45px, vertical deviation < 60px, fast swipe)
     if (Math.abs(diffX) > 45 && Math.abs(diffY) < 60 && duration < 350) {
       if (diffX > 0) {
-        updateScore(team, 1); // Swipe Right -> Add
+        updateScore(team, 1, false); // Swipe Right -> Add (no haptics)
       } else {
-        updateScore(team, -1); // Swipe Left -> Deduct
+        updateScore(team, -1, false); // Swipe Left -> Deduct (no haptics)
       }
     } else if (Math.abs(diffX) < 20 && Math.abs(diffY) < 20 && duration < 350) {
-      updateScore(team, 1); // Clean short tap -> Add
+      updateScore(team, 1, true); // Clean short tap -> Add (with haptics)
     }
   }, { passive: true });
   
@@ -190,40 +184,13 @@ function initGestures(panel, team) {
   panel.addEventListener("click", (e) => {
     // Only register clicks if touch didn't happen (avoid double triggers on mobile)
     if (e.pointerType === "mouse") {
-      updateScore(team, 1);
+      updateScore(team, 1, true); // Desktop click -> Add (with haptics)
     }
   });
 }
 
 initGestures(panelRed, "red");
 initGestures(panelBlue, "blue");
-
-// Swap Sides (Left/Right)
-btnSwap.addEventListener("click", () => {
-  triggerHaptic("medium");
-  state.isSwapped = !state.isSwapped;
-  
-  if (state.isSwapped) {
-    panelRed.style.order = "2";
-    panelBlue.style.order = "1";
-  } else {
-    panelRed.style.order = "1";
-    panelBlue.style.order = "2";
-  }
-  
-  ensureWakeLock();
-});
-
-// Toggle swap button availability based on score
-function updateButtonStates() {
-  const isScoreZero = state.red === 0 && state.blue === 0;
-  btnSwap.disabled = !isScoreZero;
-  if (!isScoreZero) {
-    btnSwap.setAttribute("title", "Swap Sides (Locked during match)");
-  } else {
-    btnSwap.setAttribute("title", "Swap Sides");
-  }
-}
 
 // Reset Scores (Double click/tap to avoid accidental triggers)
 let lastResetClick = 0;
@@ -235,12 +202,8 @@ function handleReset() {
     state.blue = 0;
     scoreRed.textContent = "0";
     scoreBlue.textContent = "0";
-    triggerHaptic("success");
-    updateButtonStates();
     ensureWakeLock();
   } else {
-    // First tap indicator
-    triggerHaptic("selection");
     // Visual hint of click
     btnReset.style.color = "#f43f5e";
     setTimeout(() => btnReset.style.color = "#f8fafc", 400);
@@ -252,7 +215,6 @@ btnReset.addEventListener("click", handleReset);
 
 // Fullscreen API Handling
 btnFullscreen.addEventListener("click", () => {
-  triggerHaptic("selection");
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().then(() => {
       iconFullscreen.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
@@ -303,7 +265,6 @@ async function ensureWakeLock() {
 // Request wake lock on load
 window.addEventListener("load", () => {
   ensureWakeLock();
-  updateButtonStates(); // Set initial disabled status of swap button
   
   // Register PWA Service Worker
   if ("serviceWorker" in navigator) {
@@ -322,33 +283,26 @@ document.addEventListener("visibilitychange", () => {
 
 // Keyboard shortcuts for desktop testing/controllers
 document.addEventListener("keydown", (e) => {
-  // Determine left and right team based on swap state
-  const leftTeam = state.isSwapped ? "blue" : "red";
-  const rightTeam = state.isSwapped ? "red" : "blue";
-  
   switch (e.key.toLowerCase()) {
-    // Left Team Control
+    // Red Team Control (Left)
     case "q":
     case "a":
-      updateScore(leftTeam, 1);
+      updateScore("red", 1, true);
       break;
     case "z":
-      updateScore(leftTeam, -1);
+      updateScore("red", -1, false);
       break;
       
-    // Right Team Control
+    // Blue Team Control (Right)
     case "p":
     case "l":
-      updateScore(rightTeam, 1);
+      updateScore("blue", 1, true);
       break;
     case "m":
-      updateScore(rightTeam, -1);
+      updateScore("blue", -1, false);
       break;
       
     // Global controls
-    case "s":
-      if (!btnSwap.disabled) btnSwap.click();
-      break;
     case "f":
       btnFullscreen.click();
       break;
