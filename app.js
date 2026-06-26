@@ -25,14 +25,97 @@ document.addEventListener("touchstart", (e) => {
   }
 }, { passive: false });
 
-// Haptic feedback helper
-function vibrate(pattern = 40) {
-  if ("vibrate" in navigator) {
-    try {
-      navigator.vibrate(pattern);
-    } catch (e) {
-      // Ignore vibration errors
+// Haptics Presets (Adapted from web-haptics)
+const HAPTICS = {
+  success: [{ duration: 30, intensity: 0.5 }, { delay: 60, duration: 40, intensity: 1 }],
+  warning: [{ duration: 40, intensity: 0.8 }, { delay: 100, duration: 40, intensity: 0.6 }],
+  error: [
+    { duration: 40, intensity: 0.7 },
+    { delay: 40, duration: 40, intensity: 0.7 },
+    { delay: 40, duration: 40, intensity: 0.9 },
+    { delay: 40, duration: 50, intensity: 0.6 }
+  ],
+  light: [{ duration: 15, intensity: 0.4 }],
+  medium: [{ duration: 25, intensity: 0.7 }],
+  heavy: [{ duration: 35, intensity: 1.0 }],
+  soft: [{ duration: 40, intensity: 0.5 }],
+  selection: [{ duration: 10, intensity: 0.4 }]
+};
+
+// Duty-cycling helper to translate intensity (vibe amplitude) to standard millisecond patterns
+function getDutyCycle(duration, intensity, Q4 = 20) {
+  if (intensity >= 1) return [duration];
+  if (intensity <= 0) return [];
+  
+  const onTime = Math.max(1, Math.round(Q4 * intensity));
+  const offTime = Q4 - onTime;
+  let pattern = [];
+  let remaining = duration;
+  
+  while (remaining >= Q4) {
+    pattern.push(onTime, offTime);
+    remaining -= Q4;
+  }
+  
+  if (remaining > 0) {
+    const lastOn = Math.max(1, Math.round(remaining * intensity));
+    pattern.push(lastOn);
+    const lastOff = remaining - lastOn;
+    if (lastOff > 0) pattern.push(lastOff);
+  }
+  return pattern;
+}
+
+// Convert web-haptics JSON schema to native navigator.vibrate arrays
+function translatePattern(steps, defaultIntensity = 1) {
+  const Q4 = 20;
+  let pattern = [];
+  
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    const intensity = Math.max(0, Math.min(1, step.intensity ?? defaultIntensity));
+    const delay = step.delay ?? 0;
+    
+    if (delay > 0) {
+      if (pattern.length > 0 && pattern.length % 2 === 0) {
+        pattern[pattern.length - 1] += delay;
+      } else {
+        if (pattern.length === 0) pattern.push(0);
+        pattern.push(delay);
+      }
     }
+    
+    const slices = getDutyCycle(step.duration, intensity, Q4);
+    if (slices.length === 0) {
+      if (pattern.length > 0 && pattern.length % 2 === 0) {
+        pattern[pattern.length - 1] += step.duration;
+      } else {
+        if (step.duration > 0) {
+          pattern.push(0);
+          pattern.push(step.duration);
+        }
+      }
+      continue;
+    }
+    
+    for (let j = 0; j < slices.length; j++) {
+      pattern.push(slices[j]);
+    }
+  }
+  return pattern;
+}
+
+// Main haptics trigger function
+function triggerHaptic(presetName) {
+  if (!("vibrate" in navigator)) return;
+  const steps = HAPTICS[presetName];
+  if (!steps) return;
+  
+  try {
+    const pattern = translatePattern(steps);
+    navigator.vibrate(pattern);
+  } catch (e) {
+    // Ignore vibration restrictions in browser contexts
   }
 }
 
@@ -50,15 +133,15 @@ function updateScore(team, diff) {
   scoreDisplay.textContent = state[team];
   
   if (diff > 0) {
-    // Add Score visual feedback (Bump animation)
-    vibrate(60);
+    // Add Score visual feedback (Bump animation + Light haptic click)
+    triggerHaptic("light");
     scoreDisplay.classList.remove("bump");
     void scoreDisplay.offsetWidth; // Trigger reflow to restart animation
     scoreDisplay.classList.add("bump");
     setTimeout(() => scoreDisplay.classList.remove("bump"), 150);
   } else {
-    // Deduct Score visual feedback (Flash animation)
-    vibrate([30, 30]);
+    // Deduct Score visual feedback (Flash animation + Warning double pulse)
+    triggerHaptic("warning");
     flash.classList.remove("show");
     void flash.offsetWidth;
     flash.classList.add("show");
@@ -117,7 +200,7 @@ initGestures(panelBlue, "blue");
 
 // Swap Sides (Left/Right)
 btnSwap.addEventListener("click", () => {
-  vibrate(40);
+  triggerHaptic("medium");
   state.isSwapped = !state.isSwapped;
   
   if (state.isSwapped) {
@@ -152,12 +235,12 @@ function handleReset() {
     state.blue = 0;
     scoreRed.textContent = "0";
     scoreBlue.textContent = "0";
-    vibrate([80, 50, 80]);
+    triggerHaptic("success");
     updateButtonStates();
     ensureWakeLock();
   } else {
     // First tap indicator
-    vibrate(30);
+    triggerHaptic("selection");
     // Visual hint of click
     btnReset.style.color = "#f43f5e";
     setTimeout(() => btnReset.style.color = "#f8fafc", 400);
@@ -169,7 +252,7 @@ btnReset.addEventListener("click", handleReset);
 
 // Fullscreen API Handling
 btnFullscreen.addEventListener("click", () => {
-  vibrate(40);
+  triggerHaptic("selection");
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().then(() => {
       iconFullscreen.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
