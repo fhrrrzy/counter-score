@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Scoreboard - Badminton Score Tracker</title>
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+</head>
+<body>
+
+  <div class="app-container" id="app">
+    
+    <!-- Red Team Panel -->
+    <div class="team-panel red-team" id="panel-red">
+      <div class="deduct-flash" id="flash-red"></div>
+      <div class="score-display" id="score-red">0</div>
+      <div class="gesture-hint">Tap / Swipe Right to Add • Swipe Left to Deduct</div>
+    </div>
+    
+    <!-- Blue Team Panel -->
+    <div class="team-panel blue-team" id="panel-blue">
+      <div class="deduct-flash" id="flash-blue"></div>
+      <div class="score-display" id="score-blue">0</div>
+      <div class="gesture-hint">Tap / Swipe Right to Add • Swipe Left to Deduct</div>
+    </div>
+    
+    <!-- Floating Control Dock -->
+    <div class="central-dock">
+      <!-- Reset Score Button -->
+      <button class="dock-btn" id="btn-reset" title="Reset Scores (Double click/tap)">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6 0 2.97-2.17 5.43-5 5.9v2.06c3.95-.49 7-3.85 7-7.96 0-4.42-3.58-8-8-8zm-6 8c0-2.97 2.17-5.43 5-5.9V5.04c-3.95.49-7 3.85-7 7.96 0 4.42 3.58 8 8 8v-3c-3.31 0-6-2.69-6-6z"/>
+        </svg>
+      </button>
+      
+      <!-- Swap Sides Button -->
+      <button class="dock-btn" id="btn-swap" title="Swap Sides">
+        <svg viewBox="0 0 24 24">
+          <path d="M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z"/>
+        </svg>
+      </button>
+      
+      <!-- Toggle Fullscreen Button -->
+      <button class="dock-btn" id="btn-fullscreen" title="Toggle Fullscreen">
+        <svg viewBox="0 0 24 24" id="icon-fullscreen">
+          <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+      </button>
+      
+      <!-- Wake Lock Status Indicator -->
+      <div class="wakelock-status" id="wakelock-indicator" title="Wake Lock (Green = On, Red = Off)"></div>
+    </div>
+    
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

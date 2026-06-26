@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="512" height="512" rx="128" fill="#0f172a"/>
+  <!-- Decorative soft red/blue rings -->
+  <circle cx="180" cy="256" r="140" fill="none" stroke="hsl(354, 85%, 68%)" stroke-width="24" opacity="0.8"/>
+  <circle cx="332" cy="256" r="140" fill="none" stroke="hsl(214, 85%, 68%)" stroke-width="24" opacity="0.8"/>
+  <!-- Shuttlecock design in center -->
+  <g transform="translate(256, 220) scale(1.4)">
+    <!-- Feathers -->
+    <path d="M-30,-60 L-10,30 L10,30 L30,-60 Z" fill="#e2e8f0" opacity="0.9"/>
+    <path d="M-45,-55 L-20,30 L0,30 L-25,-55 Z" fill="#cbd5e1" opacity="0.75"/>
+    <path d="M45,-55 L20,30 L0,30 L25,-55 Z" fill="#cbd5e1" opacity="0.75"/>
+    <!-- Base -->
+    <path d="M-20,30 C-20,55 20,55 20,30 Z" fill="hsl(354, 85%, 68%)"/>
+    <path d="M-20,30 L20,30 L20,36 L-20,36 Z" fill="#ffffff"/>
+  </g>
+</svg>

@@ -1,0 +1,214 @@
+/* Modern Web Scoreboard Stylesheet */
+
+:root {
+  --color-red-bg: hsl(354, 75%, 62%);
+  --color-blue-bg: hsl(214, 75%, 62%);
+  --color-red-active: hsl(354, 75%, 52%);
+  --color-blue-active: hsl(214, 75%, 52%);
+  
+  --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0f172a;
+  font-family: var(--font-stack);
+  color: #ffffff;
+  position: fixed; /* Prevents bounce scroll on iOS */
+  touch-action: none;
+}
+
+/* Main Container Layout */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  flex-direction: column; /* Default portrait: Top & Bottom */
+}
+
+@media (orientation: landscape) {
+  .app-container {
+    flex-direction: row; /* Landscape: Left & Right */
+  }
+}
+
+/* Team Score Panels */
+.team-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.team-panel.red-team {
+  background-color: var(--color-red-bg);
+}
+
+.team-panel.blue-team {
+  background-color: var(--color-blue-bg);
+}
+
+/* Active panel scale-down feedback when tapped */
+.team-panel:active {
+  transform: scale(0.98);
+}
+
+.team-panel.red-team:active {
+  background-color: var(--color-red-active);
+}
+
+.team-panel.blue-team:active {
+  background-color: var(--color-blue-active);
+}
+
+/* Big Center Score */
+.score-display {
+  font-size: clamp(8rem, 30vw, 24rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none; /* Let touches pass to the panel */
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.score-display.bump {
+  transform: scale(1.1);
+}
+
+
+
+/* Swipe Indicator Hints (subtle) */
+.gesture-hint {
+  position: absolute;
+  bottom: 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  opacity: 0.4;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+/* Floating Central Dock (Reset, Fullscreen, Swap) */
+.central-dock {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  align-items: center;
+}
+
+/* Circle Dock Buttons */
+.dock-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease, opacity 0.2s ease;
+  position: relative;
+}
+
+.dock-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dock-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dock-btn:active {
+  transform: scale(0.9);
+}
+
+.dock-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Wake Lock status indicator light */
+.wakelock-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444; /* red by default */
+  box-shadow: 0 0 8px #ef4444;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.wakelock-status.active {
+  background-color: #22c55e; /* green */
+  box-shadow: 0 0 8px #22c55e;
+}
+
+/* Screen Orientation Lock Hint Overlay */
+.rotate-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0f172a;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Visual feedback on score deduction */
+.deduct-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.deduct-flash.show {
+  opacity: 1;
+}
