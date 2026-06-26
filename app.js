@@ -1,7 +1,9 @@
-// State Management
+// State Management (Restore from LocalStorage if page refreshed/closed)
+const savedRed = parseInt(localStorage.getItem("scoreboard_score_red") || "0", 10);
+const savedBlue = parseInt(localStorage.getItem("scoreboard_score_blue") || "0", 10);
 const state = {
-  red: 0,
-  blue: 0
+  red: isNaN(savedRed) ? 0 : savedRed,
+  blue: isNaN(savedBlue) ? 0 : savedBlue
 };
 
 // DOM References
@@ -15,6 +17,10 @@ const btnReset = document.getElementById("btn-reset");
 const btnFullscreen = document.getElementById("btn-fullscreen");
 const iconFullscreen = document.getElementById("icon-fullscreen");
 const wakeLockIndicator = document.getElementById("wakelock-indicator");
+
+// Sync initial HTML values with loaded state
+scoreRed.textContent = state.red;
+scoreBlue.textContent = state.blue;
 
 // Prevent scrolling, pinch-zooming, and bounce effects on touch interfaces
 document.addEventListener("touchstart", (e) => {
@@ -145,6 +151,9 @@ function updateScore(team, diff, isTap = false) {
     setTimeout(() => flash.classList.remove("show"), 150);
   }
   
+  // Persist score state to local storage
+  localStorage.setItem(`scoreboard_score_${team}`, state[team]);
+  
   // Re-verify Wake Lock is still active on score update
   ensureWakeLock();
 }
@@ -202,6 +211,11 @@ function handleReset() {
     state.blue = 0;
     scoreRed.textContent = "0";
     scoreBlue.textContent = "0";
+    
+    // Reset persisted state in local storage
+    localStorage.setItem("scoreboard_score_red", "0");
+    localStorage.setItem("scoreboard_score_blue", "0");
+    
     ensureWakeLock();
   } else {
     // Visual hint of click
